@@ -1,0 +1,126 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://assets/tileset/prison/tileset.png" type="Texture" id=1]
+[ext_resource path="res://addons/level_block/default_material.tres" type="Material" id=2]
+[ext_resource path="res://addons/level_block/level_block_node.gd" type="Script" id=3]
+[ext_resource path="res://characters/player/player.tscn" type="PackedScene" id=4]
+[ext_resource path="res://characters/enemies/skeleton/skeleton.tscn" type="PackedScene" id=5]
+
+[node name="Level" type="Spatial"]
+
+[node name="Enemies" type="Spatial" parent="."]
+
+[node name="Skeleton" parent="Enemies" instance=ExtResource( 5 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2 )
+
+[node name="Prison" type="Spatial" parent="."]
+
+[node name="LevelBlock" type="Spatial" parent="Prison"]
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+north_face = 1
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock2" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+east_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock3" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 2 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+east_face = 1
+south_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock4" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+south_face = 0
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock5" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+south_face = 1
+west_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock6" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+north_face = 2
+west_face = 1
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock7" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+east_face = 1
+west_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock8" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -4 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+east_face = 1
+west_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock9" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -6 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+east_face = 1
+west_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="LevelBlock10" type="Spatial" parent="Prison"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -8 )
+script = ExtResource( 3 )
+material = ExtResource( 2 )
+texture_sheet = ExtResource( 1 )
+texture_size = 32
+north_face = 3
+east_face = 1
+west_face = 2
+top_face = 4
+bottom_face = 4
+
+[node name="Player" parent="." instance=ExtResource( 4 )]
+transform = Transform( 1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, 2, 0, 2 )

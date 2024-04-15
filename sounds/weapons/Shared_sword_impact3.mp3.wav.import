@@ -1,0 +1,23 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/Shared_sword_impact3.mp3.wav-80a082da5a94cfd2c0ed182fb6135651.sample"
+
+[deps]
+
+source_file="res://sounds/weapons/Shared_sword_impact3.mp3.wav"
+dest_files=[ "res://.import/Shared_sword_impact3.mp3.wav-80a082da5a94cfd2c0ed182fb6135651.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=0
