@@ -6,6 +6,9 @@ extends Spatial
 
 # player's movement and rotation speed
 const SPEED := 0.5
+const DODGE_DISTANCE := 0.4
+# this will be doubled since it will repeat twice
+const DODGE_DURATION := 0.2
 
 # check for collision at the front
 onready var front_ray := $FrontRay
@@ -13,9 +16,11 @@ onready var front_ray := $FrontRay
 # for movement and rotation
 var tween
 
-# check if animation finish
-var right_hand_animation = false
-var left_hand_animation = false
+# get inital position when enter combat
+var initial_position = Vector3()
+
+# get enemy
+var enemy
 
 # for checking player's current state
 var state_dict = {   
@@ -49,10 +54,6 @@ var sp = max_sp
 var sp_increment = 1
 var is_in_turn = false
 
-##############
-## 
-#############
-
 func _ready():
 	attributes_setter()
 
@@ -64,25 +65,23 @@ func _ready():
 func _physics_process(_delta):
 	move(SPEED)
 	confirm()
-	change_equipment()
+#	change_equipment()
 	progress_speed_bar()
 	combat_dialogue()
 	hud_tracker()
 	attack_mode()
+	defense_mode()
 	hurtbox_frame_handler()
+	dodge_hurtbox_handler()
 
 #####################
 ## STATE MODIFIER ##
 #####################
 
-# input should only be one of the followings:
-# combat, explore, and observe
-
 func modify_state(input):
 	for state in state_dict:
 		if state == input:
 			state_dict[state] = true
-			print(state)
 		else:
 			state_dict[state] = false
 
@@ -96,6 +95,7 @@ func confirm():
 			$HUD/DialogueContainer.visible = false
 			$HUD/DialogueContainer/Label.text = ""
 			modify_state("combat_first_turn")
+			enemy.modify_state("combat_first_turn")
 
 func attributes_setter():
 	$HUD/PlayerData/Attributes/Hp.max_value = max_hp
@@ -116,18 +116,18 @@ func hud_tracker():
 	$HUD/PlayerData/Attributes/Mp.value = mp
 	$HUD/PlayerData/Attributes/Sp.value = sp
 
-func change_equipment():
-	if state_dict.explore:
-		if Input.is_action_just_pressed("ui_4"):
-			if $FirstPerson/Hands/RightHand.animation == "fist_idle":
-				$FirstPerson/Hands/RightHand.animation = "dagger_idle"
-			elif $FirstPerson/Hands/RightHand.animation == "dagger_idle":
-				$FirstPerson/Hands/RightHand.animation = "fist_idle"
-		if Input.is_action_just_pressed("ui_2"):
-			if $FirstPerson/Hands/LeftHand.animation == "fist_idle":
-				$FirstPerson/Hands/LeftHand.animation = "dagger_idle"
-			elif $FirstPerson/Hands/LeftHand.animation == "dagger_idle":
-				$FirstPerson/Hands/LeftHand.animation = "fist_idle"
+#func change_equipment():
+#	if state_dict.explore:
+#		if Input.is_action_just_pressed("ui_4"):
+#			if $FirstPerson/Hands/RightHand.animation == "fist_idle":
+#				$FirstPerson/Hands/RightHand.animation = "dagger_idle"
+#			elif $FirstPerson/Hands/RightHand.animation == "dagger_idle":
+#				$FirstPerson/Hands/RightHand.animation = "fist_idle"
+#		if Input.is_action_just_pressed("ui_2"):
+#			if $FirstPerson/Hands/LeftHand.animation == "fist_idle":
+#				$FirstPerson/Hands/LeftHand.animation = "dagger_idle"
+#			elif $FirstPerson/Hands/LeftHand.animation == "dagger_idle":
+#				$FirstPerson/Hands/LeftHand.animation = "fist_idle"
 
 ##################
 ## EXPLORE MODE ##
@@ -171,9 +171,10 @@ func move(speed):
 
 # detecting enemy and initialize combat mode
 func _on_EnemyDetector_body_entered(body):
-	var enemy = body.get_parent()
+	enemy = body.get_parent()
 	if "Enemy" in body.name:
 		modify_state("dialogue")
+		initial_position = $FirstPerson.global_translation
 		$HUD/DialogueContainer/Label.text = "A wild " + enemy.name + " appears!"
 		$HUD/DialogueContainer.visible = true
 		enemy.get_node("HUD").visible = true
@@ -182,12 +183,17 @@ func combat_dialogue():
 	if state_dict.combat_dialogue:
 		$HUD/DialogueContainer.visible = true
 		$HUD/DialogueContainer/CombatLabel.visible = true
+		
+#		set_process_input(true)
+		
 		if Input.is_action_just_pressed("ui_q"):
 			$HUD/DialogueContainer.visible = false
 			modify_state("combat_attack")
 		if Input.is_action_just_pressed("ui_e"):
 			$HUD/DialogueContainer.visible = false
 			modify_state("combat_defend")
+
+#		set_process_input(false)
 
 func progress_speed_bar():
 	if state_dict.combat_first_turn or state_dict.combat_attack or state_dict.combat_defend:
@@ -205,48 +211,89 @@ func attack_mode():
 	if state_dict.combat_attack:
 		if Input.is_action_just_pressed("ui_up"):
 			pass
-		if Input.is_action_just_pressed("ui_left"):
+		elif Input.is_action_just_pressed("ui_left"):
 			fist_punch()
-		if Input.is_action_just_pressed("ui_down"):
+		elif Input.is_action_just_pressed("ui_down"):
 			pass
-		if Input.is_action_just_pressed("ui_right"):
+		elif Input.is_action_just_pressed("ui_right"):
 			dagger_stab()
 
 func _on_Dagger_body_entered(body):
-	var enemy = body.get_parent()
+	enemy = body.get_parent()
 	if "Enemy" in body.name:
 		enemy.take_damage(15)
 
 func _on_Fist_body_entered(body):
-	var enemy = body.get_parent()
+	enemy = body.get_parent()
 	if "Enemy" in body.name:
 		enemy.take_damage(5)
 
 # DEFENSE MODE
 func defense_mode():
-	if state_dict.combat_defend:
+	if state_dict.combat_defend and ap > 0 and $FirstPerson.global_translation == initial_position:
 		if Input.is_action_just_pressed("ui_up"):
-			pass
+			ap -= 25
+			$Audio/Dodge.play()
+			tween = create_tween()
+			tween.tween_property($FirstPerson, "global_translation", initial_position + Vector3(0, DODGE_DISTANCE, 0), DODGE_DURATION)
 		if Input.is_action_just_pressed("ui_left"):
-			pass
+			ap -= 25
+			$Audio/Dodge.play()
+			tween = create_tween()
+			tween.tween_property($FirstPerson, "global_translation", initial_position + Vector3(-DODGE_DISTANCE, 0, 0), DODGE_DURATION)
 		if Input.is_action_just_pressed("ui_down"):
-			pass
+			ap -= 25
+			$Audio/Dodge.play()
+			tween = create_tween()
+			tween.tween_property($FirstPerson, "global_translation", initial_position + Vector3(0, -DODGE_DISTANCE, 0), DODGE_DURATION)
 		if Input.is_action_just_pressed("ui_right"):
-			pass
+			ap -= 25
+			$Audio/Dodge.play()
+			tween = create_tween()
+			tween.tween_property($FirstPerson, "global_translation", initial_position + Vector3(DODGE_DISTANCE, 0, 0), DODGE_DURATION)
 
-func dodge(direction):
-	if direction == "left":
-		pass
+func dodge_hurtbox_handler():
+	if state_dict.combat_defend or state_dict.combat_dialogue:
+		
+		if ($FirstPerson.global_translation.is_equal_approx(initial_position + Vector3(0, DODGE_DISTANCE, 0)) ) or ($FirstPerson.global_translation.is_equal_approx(initial_position + Vector3(-DODGE_DISTANCE, 0, 0)) ) or ($FirstPerson.global_translation.is_equal_approx(initial_position + Vector3(0, -DODGE_DISTANCE, 0)) ) or ($FirstPerson.global_translation.is_equal_approx(initial_position + Vector3(DODGE_DISTANCE, 0, 0)) ):
+			tween = create_tween()
+			tween.tween_property($FirstPerson, "global_translation", initial_position, DODGE_DURATION)
+
+		if $FirstPerson.global_translation != initial_position:
+			$HurtBox.disabled = true
+
+		# Top
+		if $FirstPerson.global_translation.y > initial_position.y:
+			$TopHurtBox.disabled = false
+
+		# Left
+		if $FirstPerson.global_translation.x < initial_position.x:
+			$LeftHurtBox.disabled = false
+
+		#Bottom
+		if $FirstPerson.global_translation.y < initial_position.y:
+			$BottomHurtBox.disabled = false
+
+		# Right
+		if $FirstPerson.global_translation.x > initial_position.x:
+			$RightHurtBox.disabled = false
+
+		if $FirstPerson.global_translation.is_equal_approx(initial_position):
+			$HurtBox.disabled = false
+			$TopHurtBox.disabled = true
+			$LeftHurtBox.disabled = true
+			$BottomHurtBox.disabled = true
+			$RightHurtBox.disabled = true
 
 func fist_punch():
 	if ap > 0 and $FirstPerson/Hands/LeftHand.animation != "fist_attack_00":
 		$FirstPerson/Hands/LeftHand.play("fist_attack_00")
-		ap -= 25
+		ap -= 20
 
 func dagger_stab():
 	if ap > 0 and $FirstPerson/Hands/RightHand.animation != "dagger_attack_00":
 		$FirstPerson/Hands/RightHand.play("dagger_attack_00")
-		ap -= 40
+		ap -= 30
 
 #######################
 ## ANIMATION HANDLER ##
@@ -276,7 +323,6 @@ func hurtbox_frame_handler():
 		$Attacks/Fist/CollisionShape.disabled = false
 		if $Audio/Fist/Fist00.playing == false:
 			$Audio/Fist/Fist00.play()
-
 
 func _on_RightHand_animation_finished():
 #	right_hand_animation = false

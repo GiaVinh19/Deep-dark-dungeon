@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=2]
+[gd_scene load_steps=36 format=2]
 
 [ext_resource path="res://characters/player/player.gd" type="Script" id=1]
 [ext_resource path="res://assets/player/fps/unarmed/WEAPON10.CIF_0-0.PNG" type="Texture" id=2]
@@ -26,6 +26,7 @@
 [ext_resource path="res://sounds/weapons/Shared_sword_impact2.mp3.wav" type="AudioStream" id=24]
 [ext_resource path="res://sounds/weapons/Shared_sword_impact1.mp3.wav" type="AudioStream" id=25]
 [ext_resource path="res://sounds/weapons/Shared_sword_impact3.mp3.wav" type="AudioStream" id=26]
+[ext_resource path="res://sounds/actions/medroll.wav" type="AudioStream" id=27]
 
 [sub_resource type="BoxShape" id=1]
 
@@ -90,33 +91,31 @@ bg_color = Color( 1, 1, 1, 0 )
 script = ExtResource( 1 )
 
 [node name="HurtBox" type="CollisionShape" parent="."]
+visible = false
 shape = SubResource( 1 )
 
 [node name="TopHurtBox" type="CollisionShape" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, 0.5, 0 )
-visible = false
 shape = SubResource( 1 )
 disabled = true
 
 [node name="LeftHurtBox" type="CollisionShape" parent="."]
 transform = Transform( 0.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 0 )
-visible = false
 shape = SubResource( 1 )
 disabled = true
 
 [node name="BottomHurtBox" type="CollisionShape" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, -0.5, 0 )
-visible = false
 shape = SubResource( 1 )
 disabled = true
 
 [node name="RightHurtBox" type="CollisionShape" parent="."]
 transform = Transform( 0.1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0 )
-visible = false
 shape = SubResource( 1 )
 disabled = true
 
 [node name="FrontRay" type="RayCast" parent="."]
+visible = false
 enabled = true
 cast_to = Vector3( 0, 0, -2 )
 
@@ -144,6 +143,7 @@ animation = "dagger_idle"
 
 [node name="EnemyDetector" type="Area" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2 )
+visible = false
 
 [node name="CollisionShape" type="CollisionShape" parent="EnemyDetector"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
@@ -260,6 +260,7 @@ custom_styles/normal = SubResource( 8 )
 text = "[E] Defend"
 
 [node name="Attacks" type="Spatial" parent="."]
+visible = false
 
 [node name="Fist" type="Area" parent="Attacks"]
 
@@ -292,14 +293,18 @@ stream = ExtResource( 22 )
 
 [node name="Dagger00" type="AudioStreamPlayer" parent="Audio/Dagger"]
 stream = ExtResource( 25 )
-pitch_scale = 1.2
+pitch_scale = 2.0
 
 [node name="Dagger01" type="AudioStreamPlayer" parent="Audio/Dagger"]
 stream = ExtResource( 24 )
-pitch_scale = 1.2
+pitch_scale = 2.0
 
 [node name="Dagger02" type="AudioStreamPlayer" parent="Audio/Dagger"]
 stream = ExtResource( 26 )
+pitch_scale = 2.0
+
+[node name="Dodge" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource( 27 )
 pitch_scale = 1.2
 
 [connection signal="animation_finished" from="FirstPerson/Hands/LeftHand" to="." method="_on_LeftHand_animation_finished"]

@@ -14,10 +14,6 @@ config/name="Deep Dark Dungeon"
 run/main_scene="res://levels/Level.tscn"
 config/icon="res://icon.png"
 
-[display]
-
-window/size/resizable=false
-
 [editor_plugins]
 
 enabled=PoolStringArray( "res://addons/level_block/plugin.cfg" )

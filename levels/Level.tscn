@@ -14,6 +14,7 @@
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2 )
 
 [node name="Prison" type="Spatial" parent="."]
+visible = false
 
 [node name="LevelBlock" type="Spatial" parent="Prison"]
 script = ExtResource( 3 )
