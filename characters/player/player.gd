@@ -15,6 +15,10 @@ onready var front_ray := $FrontRay
 
 # for movement and rotation
 var tween
+var tween_hp
+var tween_ap
+var tween_dead
+var tween_battle_music
 
 # get inital position when enter combat
 var initial_position = Vector3()
@@ -29,7 +33,9 @@ var state_dict = {
 	"combat_first_turn": false,
 	"combat_dialogue": false,
 	"combat_attack": false,
-	"combat_defend": false
+	"combat_defend": false,
+	"dead": false,
+	"victory": false
 }
 
 # ATTRIBUTES
@@ -56,6 +62,7 @@ var is_in_turn = false
 
 func _ready():
 	attributes_setter()
+	set_process_input(true)
 
 #####################
 ## RUN EVERY FRAME ##
@@ -73,10 +80,15 @@ func _physics_process(_delta):
 	defense_mode()
 	hurtbox_frame_handler()
 	dodge_hurtbox_handler()
-
+	dead()
+	victory()
+	stop_music()
 #####################
 ## STATE MODIFIER ##
 #####################
+func stop_music():
+	if $Audio/Battle.volume_db == -80:
+		$Audio/Battle.stop()
 
 func modify_state(input):
 	for state in state_dict:
@@ -91,11 +103,30 @@ func modify_state(input):
 
 func confirm():
 	if state_dict.dialogue:
-		if Input.is_action_just_pressed("ui_e"):
+		if Input.is_action_just_pressed("ui_accept"):
 			$HUD/DialogueContainer.visible = false
 			$HUD/DialogueContainer/Label.text = ""
 			modify_state("combat_first_turn")
 			enemy.modify_state("combat_first_turn")
+	if state_dict.victory:
+		if Input.is_action_just_pressed("ui_accept"):
+			$HUD/DialogueContainer/CombatLabel.visible = false
+			$HUD/DialogueContainer.visible = false
+			$HUD/DialogueContainer/Label.text = ""
+			modify_state("explore")
+
+func victory():
+	if state_dict.victory:
+		
+		sp = max_sp
+		ap = max_ap
+		enemy = null
+		initial_position = Vector3()
+		is_in_turn = false
+		$HUD/DialogueContainer/CombatLabel.visible = false
+		$HUD/DialogueContainer/Label.text = "Victory Achieved"
+		$HUD/DialogueContainer.visible = true
+	
 
 func attributes_setter():
 	$HUD/PlayerData/Attributes/Hp.max_value = max_hp
@@ -111,10 +142,23 @@ func attributes_setter():
 	$HUD/PlayerData/Attributes/Sp.value = max_sp
 
 func hud_tracker():
-	$HUD/PlayerData/Attributes/Hp.value = hp
-	$HUD/PlayerData/Attributes/Ap.value = ap
+	tween_hp = create_tween()
+	tween_hp.tween_property($HUD/PlayerData/Attributes/Hp, "value", hp , 0.2)
+	tween_ap = create_tween()
+	tween_ap.tween_property($HUD/PlayerData/Attributes/Ap, "value", ap , 0.2)
 	$HUD/PlayerData/Attributes/Mp.value = mp
 	$HUD/PlayerData/Attributes/Sp.value = sp
+
+#func _input(event):
+#	if state_dict.combat_dialogue:
+#		if event.is_action_pressed("ui_q"):
+#			get_tree().paused = false
+#			$HUD/DialogueContainer.visible = false
+#			modify_state("combat_attack")
+#		elif event.is_action_pressed("ui_e"):
+#			get_tree().paused = false
+#			$HUD/DialogueContainer.visible = false
+#			modify_state("combat_defend")
 
 #func change_equipment():
 #	if state_dict.explore:
@@ -146,21 +190,27 @@ func move(speed):
 				$EnemyDetector/CollisionShape.disabled = false
 
 		if Input.is_action_just_pressed("ui_up"):
-			if front_ray.is_colliding():
-				print("door stuck")
 			if not front_ray.is_colliding():
+				if $Audio/Walk.playing == false:
+					$Audio/Walk.play()
 				tween = create_tween()
 				tween.tween_property(self, "transform", transform.translated(Vector3.FORWARD * 2), speed*0.8)
 
 		if Input.is_action_just_pressed("ui_left"):
+			if $Audio/Walk.playing == false:
+				$Audio/Walk.play()
 			tween = create_tween()
 			tween.tween_property(self, "transform:basis", transform.basis.rotated(Vector3.UP, PI / 2), speed) 
 
 		if Input.is_action_just_pressed("ui_down"):
+			if $Audio/Walk.playing == false:
+				$Audio/Walk.play()
 			tween = create_tween()
 			tween.tween_property(self, "transform:basis", transform.basis.rotated(Vector3.UP, PI), speed*1.4)
 
 		if Input.is_action_just_pressed("ui_right"):
+			if $Audio/Walk.playing == false:
+				$Audio/Walk.play()
 			tween = create_tween()
 			tween.tween_property(self, "transform:basis", transform.basis.rotated(Vector3.UP, -PI / 2), speed)
 
@@ -173,6 +223,7 @@ func move(speed):
 func _on_EnemyDetector_body_entered(body):
 	enemy = body.get_parent()
 	if "Enemy" in body.name:
+		$Audio/Battle.play()
 		modify_state("dialogue")
 		initial_position = $FirstPerson.global_translation
 		$HUD/DialogueContainer/Label.text = "A wild " + enemy.name + " appears!"
@@ -184,31 +235,36 @@ func combat_dialogue():
 		$HUD/DialogueContainer.visible = true
 		$HUD/DialogueContainer/CombatLabel.visible = true
 		
-#		set_process_input(true)
-		
+		if get_tree().paused == false:
+			get_tree().paused = true
+
 		if Input.is_action_just_pressed("ui_q"):
+			get_tree().paused = false
 			$HUD/DialogueContainer.visible = false
 			modify_state("combat_attack")
 		if Input.is_action_just_pressed("ui_e"):
+			get_tree().paused = false
 			$HUD/DialogueContainer.visible = false
 			modify_state("combat_defend")
 
-#		set_process_input(false)
-
 func progress_speed_bar():
 	if state_dict.combat_first_turn or state_dict.combat_attack or state_dict.combat_defend:
-		if sp == max_sp and is_in_turn == false:
+		if sp == max_sp and is_in_turn == false and enemy.dead() == null:
 			sp = 0
 			is_in_turn = true
 		sp += sp_increment
-		if sp == max_sp and is_in_turn == true:
+		if sp == max_sp and is_in_turn == true and enemy.dead() == null:
 			modify_state("combat_dialogue")
 			ap = max_ap
+			is_in_turn = false
+		if enemy.dead():
+			ap = max_ap
+			sp = max_sp
 			is_in_turn = false
 
 # ATTACK MODE
 func attack_mode():
-	if state_dict.combat_attack:
+	if state_dict.combat_attack and enemy.dead() == null:
 		if Input.is_action_just_pressed("ui_up"):
 			pass
 		elif Input.is_action_just_pressed("ui_left"):
@@ -221,16 +277,16 @@ func attack_mode():
 func _on_Dagger_body_entered(body):
 	enemy = body.get_parent()
 	if "Enemy" in body.name:
-		enemy.take_damage(15)
+		enemy.take_damage(25)
 
 func _on_Fist_body_entered(body):
 	enemy = body.get_parent()
 	if "Enemy" in body.name:
-		enemy.take_damage(5)
+		enemy.take_damage(10)
 
 # DEFENSE MODE
 func defense_mode():
-	if state_dict.combat_defend and ap > 0 and $FirstPerson.global_translation == initial_position:
+	if state_dict.combat_defend and ap > 0 and $FirstPerson.global_translation == initial_position and enemy.dead() == null:
 		if Input.is_action_just_pressed("ui_up"):
 			ap -= 25
 			$Audio/Dodge.play()
@@ -295,6 +351,28 @@ func dagger_stab():
 		$FirstPerson/Hands/RightHand.play("dagger_attack_00")
 		ap -= 30
 
+func take_damage(damage):
+	hp -= damage
+	if hp <= 0:
+		modify_state("dead")
+
+func dead():
+	if state_dict.dead:
+		tween_battle_music = create_tween()
+		tween_battle_music.tween_property($Audio/Battle, "volume_db", -80, 3)
+		$HurtBox.disabled = true
+		tween_dead = create_tween()
+		tween_dead.tween_property($HUD/Defeated, "modulate", Color(1, 1, 1, 1), 1)
+		if $Audio/Defeated.playing == false:
+			$Audio/Defeated.play()
+		if $DeadTimer.is_stopped():
+			$DeadTimer.start()
+
+#func frame_freeze(time_scale, duration):
+#	Engine.time_scale = time_scale
+#	yield(get_tree().create_timer(time_scale *duration), "timeout")
+#	Engine.time_scale = 1
+
 #######################
 ## ANIMATION HANDLER ##
 #######################
@@ -331,3 +409,16 @@ func _on_RightHand_animation_finished():
 func _on_LeftHand_animation_finished():
 #	left_hand_animation = false
 	$FirstPerson/Hands/LeftHand.play("fist_idle")
+
+
+func _on_DeadTimer_timeout():
+# warning-ignore:return_value_discarded
+	get_tree().change_scene("res://levels/Menu.tscn")
+
+func _on_EnemyDetector_body_exited(body):
+	enemy = body.get_parent()
+	if "Enemy" in body.name:
+		tween_battle_music = create_tween()
+		tween_battle_music.tween_property($Audio/Battle, "volume_db", -80, 3)
+		$Audio/Victory.play()
+		modify_state("victory")

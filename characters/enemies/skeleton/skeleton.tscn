@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=2]
+[gd_scene load_steps=30 format=2]
 
 [ext_resource path="res://characters/enemies/enemy.gd" type="Script" id=1]
 [ext_resource path="res://assets/enemies/skeleton/0-0.PNG" type="Texture" id=2]
@@ -12,7 +12,7 @@
 [ext_resource path="res://assets/enemies/skeleton/5-5.PNG" type="Texture" id=10]
 [ext_resource path="res://assets/enemies/skeleton/5-1.PNG" type="Texture" id=11]
 [ext_resource path="res://assets/enemies/skeleton/10-0.PNG" type="Texture" id=12]
-[ext_resource path="res://characters/enemies/skeleton/SpriteHandler.gd" type="Script" id=13]
+[ext_resource path="res://sounds/weapons/Coup_de_Grace_blood3.mp3.wav" type="AudioStream" id=13]
 [ext_resource path="res://assets/enemies/skeleton/6-1.PNG" type="Texture" id=14]
 [ext_resource path="res://assets/enemies/skeleton/6-2.PNG" type="Texture" id=15]
 [ext_resource path="res://assets/ui/hud/action_bar.png" type="Texture" id=16]
@@ -22,6 +22,10 @@
 [ext_resource path="res://assets/ui/hud/magic_bar.png" type="Texture" id=20]
 [ext_resource path="res://sounds/weapons/Magnus_attack2.mp3.wav" type="AudioStream" id=21]
 [ext_resource path="res://sounds/weapons/Magnus_attack1.mp3.wav" type="AudioStream" id=22]
+[ext_resource path="res://sounds/weapons/Shared_large_blade_whoosh1.mp3.wav" type="AudioStream" id=23]
+[ext_resource path="res://sounds/weapons/Shared_large_blade_whoosh2.mp3.wav" type="AudioStream" id=24]
+[ext_resource path="res://sounds/weapons/Coup_de_Grace_target.mp3.wav" type="AudioStream" id=25]
+[ext_resource path="res://sounds/actions/Rage.mp3.wav" type="AudioStream" id=26]
 
 [sub_resource type="SpriteFrames" id=3]
 animations = [ {
@@ -56,7 +60,6 @@ script = ExtResource( 1 )
 [node name="Enemy" type="KinematicBody" parent="."]
 
 [node name="SpriteHandler" type="Spatial" parent="Enemy"]
-script = ExtResource( 13 )
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Enemy/SpriteHandler"]
 transform = Transform( 1.2, 0, 0, 0, 1.2, 0, 0, 0, 1, 0.2, -0.25, 0.8 )
@@ -64,15 +67,11 @@ billboard = 2
 double_sided = false
 frames = SubResource( 3 )
 animation = "idle"
-frame = 3
+frame = 2
 playing = true
 
 [node name="HurtBox" type="CollisionShape" parent="Enemy"]
 shape = SubResource( 4 )
-
-[node name="BlockBox" type="CollisionShape" parent="Enemy"]
-shape = SubResource( 4 )
-disabled = true
 
 [node name="Attacks" type="Area" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2 )
@@ -95,9 +94,10 @@ anchor_bottom = 1.0
 [node name="EnemyData" type="HBoxContainer" parent="HUD"]
 anchor_left = 1.0
 anchor_right = 1.0
-margin_left = -174.0
-margin_right = -116.0
-margin_bottom = 68.0
+margin_left = -207.0
+margin_top = 32.0
+margin_right = -149.0
+margin_bottom = 100.0
 rect_scale = Vector2( 3, 2 )
 
 [node name="Attributes" type="VBoxContainer" parent="HUD/EnemyData"]
@@ -145,12 +145,43 @@ fill_mode = 1
 [node name="Attacks" type="Node" parent="Audio"]
 
 [node name="Attack_00" type="AudioStreamPlayer" parent="Audio/Attacks"]
+pause_mode = 2
 stream = ExtResource( 22 )
+volume_db = -15.0
 pitch_scale = 0.8
 
+[node name="Crit_00" type="AudioStreamPlayer" parent="Audio/Attacks"]
+pause_mode = 2
+stream = ExtResource( 13 )
+
+[node name="Crit_01" type="AudioStreamPlayer" parent="Audio/Attacks"]
+pause_mode = 2
+stream = ExtResource( 25 )
+volume_db = -5.0
+pitch_scale = 1.2
+
 [node name="Attack_01" type="AudioStreamPlayer" parent="Audio/Attacks"]
+pause_mode = 2
 stream = ExtResource( 21 )
+volume_db = -15.0
 pitch_scale = 0.8
+
+[node name="Swings" type="Node" parent="Audio"]
+
+[node name="Swing_00" type="AudioStreamPlayer" parent="Audio/Swings"]
+pause_mode = 2
+stream = ExtResource( 23 )
+volume_db = -15.0
+
+[node name="Swing_01" type="AudioStreamPlayer" parent="Audio/Swings"]
+pause_mode = 2
+stream = ExtResource( 24 )
+volume_db = -15.0
+
+[node name="Rage" type="AudioStreamPlayer" parent="Audio"]
+pause_mode = 2
+stream = ExtResource( 26 )
+volume_db = -5.0
 
 [connection signal="animation_finished" from="Enemy/SpriteHandler/AnimatedSprite3D" to="." method="_on_AnimatedSprite3D_animation_finished"]
 [connection signal="body_entered" from="Attacks" to="." method="_on_Attacks_body_entered"]

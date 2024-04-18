@@ -11,7 +11,7 @@
 [node name="Enemies" type="Spatial" parent="."]
 
 [node name="Skeleton" parent="Enemies" instance=ExtResource( 5 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -8 )
 
 [node name="Prison" type="Spatial" parent="."]
 visible = false
@@ -124,4 +124,4 @@ top_face = 4
 bottom_face = 4
 
 [node name="Player" parent="." instance=ExtResource( 4 )]
-transform = Transform( 1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, 2, 0, 2 )
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -2, 0, 2 )
